@@ -42,15 +42,7 @@ df = df.query(
 df["data"] = pd.to_datetime(
     {"year": df["ano"], "month": df["mês"], "day": df["dia_do_mes"]}, format="d%/m%/y%"
 )
-df["fornecedor"] = df["descricao_prod"].apply(
-    lambda x: "GMP"
-    if "Petisco Natural Sabor" in x
-    else (
-        "Laboratório Oriente - Suplementos"
-        if "Suplemento" in x
-        else ("Padaria Pet" if "BSF" in x else "Amicus")
-    )
-)
+
 df_wk = pd.DataFrame(
     df.groupby([pd.Grouper(key="data", freq="W-MON"), "descricao_prod"])[
         "quantidade_total"
@@ -67,6 +59,26 @@ df_me.reset_index(inplace=True)
 df_pivot = df_me.pivot_table(
     index="data", columns="descricao_prod", values="quantidade_total", fill_value=0
 )
+
+df_pivot["Petisco Natural Sabor Steak Prime - 100g"] = (
+    df_pivot["Petisco Natural Sabor Steak Prime - 100g"]
+    + df_pivot["Petisco Natural Sabor Steak de Angus - 100g"]
+)
+
+df_pivot["Petí BSF é Calm 94g - Petisco Natural"] = (
+    df_pivot["Petí BSF é Calm 94g - Petisco Natural"]
+    + df_pivot["Petí BSF é Calm - Petisco Natural"]
+)
+
+df_pivot.drop(
+    [
+        "Petí BSF é Calm - Petisco Natural",
+        "Petisco Natural Sabor Steak de Angus - 100g",
+    ],
+    inplace=True,
+    axis=1,
+)
+
 
 # Modelagem de dados
 
